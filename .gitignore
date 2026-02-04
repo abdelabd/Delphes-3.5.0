@@ -38,3 +38,4 @@ hepmc2pileup
 lhco2root
 pileup2root
 Makefile
+*.csv

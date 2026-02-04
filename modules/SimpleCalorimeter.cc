@@ -294,6 +294,28 @@ void SimpleCalorimeter::Process()
     fTowerHits.push_back(towerHit);
   }
 
+  // DEBUG: Write energy fractions to file for validation against TorchDelphes
+  // Output format: one fraction per line, particles first then tracks
+  // File is appended to, so multiple events are concatenated
+  {
+    static int eventNumber = 0;
+    ofstream debugFile("simplecalo_debug_fractions.csv", ios::app);
+    if(eventNumber == 0) {
+      // Write header on first event
+      debugFile << "event,type,index,fraction" << endl;
+    }
+    // Write particle fractions
+    for(size_t i = 0; i < fTowerFractions.size(); ++i) {
+      debugFile << eventNumber << ",particle," << i << "," << fTowerFractions[i] << endl;
+    }
+    // Write track fractions
+    for(size_t i = 0; i < fTrackFractions.size(); ++i) {
+      debugFile << eventNumber << ",track," << i << "," << fTrackFractions[i] << endl;
+    }
+    debugFile.close();
+    eventNumber++;
+  }
+
   // all hits are sorted first by eta bin number, then by phi bin number,
   // then by flags and then by particle or track number
   sort(fTowerHits.begin(), fTowerHits.end());
