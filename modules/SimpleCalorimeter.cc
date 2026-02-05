@@ -316,6 +316,30 @@ void SimpleCalorimeter::Process()
     eventNumber++;
   }
 
+  // DEBUG: Write tower hits (binning info) to file for validation against TorchDelphes
+  // Format: event, type (particle=0/track=1), index, eta_bin, phi_bin, is_photon_electron
+  {
+    static int eventNumber2 = 0;
+    ofstream debugFile("simplecalo_debug_towerhits.csv", ios::app);
+    if(eventNumber2 == 0) {
+      debugFile << "event,type,index,eta_bin,phi_bin,is_em" << endl;
+    }
+    for(size_t i = 0; i < fTowerHits.size(); ++i) {
+      Long64_t hit = fTowerHits[i];
+      Short_t hitEtaBin = (hit >> 48) & 0xFFFF;
+      Short_t hitPhiBin = (hit >> 32) & 0xFFFF;
+      Short_t hitFlags = (hit >> 24) & 0xFF;
+      Int_t hitNumber = hit & 0xFFFFFF;
+      Int_t isTrack = hitFlags & 1;
+      Int_t isEM = (hitFlags >> 1) & 1;
+      const char* typeStr = isTrack ? "track" : "particle";
+      debugFile << eventNumber2 << "," << typeStr << "," << hitNumber << "," 
+                << hitEtaBin << "," << hitPhiBin << "," << isEM << endl;
+    }
+    debugFile.close();
+    eventNumber2++;
+  }
+
   // all hits are sorted first by eta bin number, then by phi bin number,
   // then by flags and then by particle or track number
   sort(fTowerHits.begin(), fTowerHits.end());
