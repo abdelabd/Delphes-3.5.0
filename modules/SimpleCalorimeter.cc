@@ -473,6 +473,31 @@ void SimpleCalorimeter::FinalizeTower()
 
   if(!fTower) return;
 
+  // DEBUG: Write tower energy data for validation against TorchDelphes
+  // Output: tower center (eta, phi), tower energy (before smearing), track energy
+  {
+    static int towerDebugEvent = -1;
+    static int towerNumber = 0;
+    static bool headerWritten = false;
+    
+    if(!headerWritten) {
+      ofstream debugFile("simplecalo_debug_towerenergy.csv", ios::trunc);
+      debugFile << "event,tower_idx,tower_eta,tower_phi,tower_energy,track_energy,eta_lo,eta_hi,phi_lo,phi_hi" << endl;
+      debugFile.close();
+      headerWritten = true;
+      towerDebugEvent = 0;
+    }
+    
+    ofstream debugFile("simplecalo_debug_towerenergy.csv", ios::app);
+    debugFile << towerDebugEvent << "," << towerNumber << ","
+              << fTowerEta << "," << fTowerPhi << ","
+              << fTowerEnergy << "," << fTrackEnergy << ","
+              << fTowerEdges[0] << "," << fTowerEdges[1] << ","  // eta edges
+              << fTowerEdges[2] << "," << fTowerEdges[3] << endl;  // phi edges
+    debugFile.close();
+    towerNumber++;
+  }
+
   sigma = fResolutionFormula->Eval(0.0, fTowerEta, 0.0, fTowerEnergy);
 
   energy = LogNormal(fTowerEnergy, sigma);
