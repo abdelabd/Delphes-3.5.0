@@ -178,6 +178,9 @@ void SimpleCalorimeter::Finish()
 
 //------------------------------------------------------------------------------
 
+// Static counter for tower energy debug - declared here so both Process() and FinalizeTower() can access it
+static int g_towerDebugEvent = -1;
+
 void SimpleCalorimeter::Process()
 {
   Candidate *particle, *track;
@@ -199,6 +202,9 @@ void SimpleCalorimeter::Process()
   vector<Double_t> *phiBins;
 
   vector<Long64_t>::iterator itTowerHits;
+
+  // Increment event counter for tower energy debug at start of each event
+  g_towerDebugEvent++;
 
   DelphesFactory *factory = GetFactory();
   fTowerHits.clear();
@@ -476,7 +482,6 @@ void SimpleCalorimeter::FinalizeTower()
   // DEBUG: Write tower energy data for validation against TorchDelphes
   // Output: tower center (eta, phi), tower energy (before smearing), track energy
   {
-    static int towerDebugEvent = -1;
     static int towerNumber = 0;
     static bool headerWritten = false;
     
@@ -485,11 +490,10 @@ void SimpleCalorimeter::FinalizeTower()
       debugFile << "event,tower_idx,tower_eta,tower_phi,tower_energy,track_energy,eta_lo,eta_hi,phi_lo,phi_hi" << endl;
       debugFile.close();
       headerWritten = true;
-      towerDebugEvent = 0;
     }
     
     ofstream debugFile("simplecalo_debug_towerenergy.csv", ios::app);
-    debugFile << towerDebugEvent << "," << towerNumber << ","
+    debugFile << g_towerDebugEvent << "," << towerNumber << ","
               << fTowerEta << "," << fTowerPhi << ","
               << fTowerEnergy << "," << fTrackEnergy << ","
               << fTowerEdges[0] << "," << fTowerEdges[1] << ","  // eta edges
