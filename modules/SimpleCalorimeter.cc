@@ -508,9 +508,34 @@ void SimpleCalorimeter::FinalizeTower()
 
   time = (fTowerTimeWeight < 1.0E-09) ? 0.0 : fTowerTime / fTowerTimeWeight;
 
-  sigma = fResolutionFormula->Eval(0.0, fTowerEta, 0.0, energy);
+  Double_t sigma_after = fResolutionFormula->Eval(0.0, fTowerEta, 0.0, energy);
 
-  if(energy < fEnergyMin || energy < fEnergySignificanceMin * sigma) energy = 0.0;
+  Double_t energy_final = energy;
+  if(energy < fEnergyMin || energy < fEnergySignificanceMin * sigma_after) energy_final = 0.0;
+
+  // DEBUG: Write smearing data for validation against TorchDelphes
+  {
+    static bool smearHeaderWritten = false;
+    static int smearTowerNumber = 0;
+    
+    if(!smearHeaderWritten) {
+      ofstream debugFile("simplecalo_debug_smearing.csv", ios::trunc);
+      debugFile << "event,tower_idx,tower_eta,energy_before,sigma_before,energy_smeared,sigma_after,energy_final" << endl;
+      debugFile.close();
+      smearHeaderWritten = true;
+    }
+    
+    ofstream debugFile("simplecalo_debug_smearing.csv", ios::app);
+    debugFile << g_towerDebugEvent << "," << smearTowerNumber << ","
+              << fTowerEta << "," << fTowerEnergy << "," << sigma << ","
+              << energy << "," << sigma_after << "," << energy_final << endl;
+    debugFile.close();
+    smearTowerNumber++;
+  }
+
+  // Use the thresholded energy
+  energy = energy_final;
+  sigma = sigma_after;
 
   if(fSmearTowerCenter)
   {
