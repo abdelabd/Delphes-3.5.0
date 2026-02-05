@@ -427,6 +427,28 @@ void SimpleCalorimeter::Process()
         else
           energyGuess = momentum.E();
 
+        // DEBUG: Write per-track sigma data for validation
+        {
+          static bool perTrackHeaderWritten = false;
+          static int perTrackNumber = 0;
+          
+          if(!perTrackHeaderWritten) {
+            ofstream debugFile("simplecalo_debug_pertrack.csv", ios::trunc);
+            debugFile << "event,track_idx,number,track_energy,fraction,weighted_energy,tower_eta,calo_sigma,track_resolution,energy_guess,sigma_sq_contrib" << endl;
+            debugFile.close();
+            perTrackHeaderWritten = true;
+          }
+          
+          double sigmaSqContrib = (track->TrackResolution * energyGuess) * (track->TrackResolution * energyGuess);
+          ofstream debugFile("simplecalo_debug_pertrack.csv", ios::app);
+          debugFile << g_towerDebugEvent << "," << perTrackNumber << "," << number << ","
+                    << momentum.E() << "," << fTrackFractions[number] << "," << energy << ","
+                    << fTowerEta << "," << sigma << "," << track->TrackResolution << ","
+                    << energyGuess << "," << sigmaSqContrib << endl;
+          debugFile.close();
+          perTrackNumber++;
+        }
+
         fTrackSigma += ((track->TrackResolution) * energyGuess) * ((track->TrackResolution) * energyGuess);
         fTowerTrackArray->Add(track);
       }
@@ -575,6 +597,28 @@ void SimpleCalorimeter::FinalizeTower()
   //compute neutral excess
 
   fTrackSigma = TMath::Sqrt(fTrackSigma);
+  
+  // DEBUG: Write tower-level track sigma for validation
+  {
+    static bool trackSigmaHeaderWritten = false;
+    static int trackSigmaTowerNumber = 0;
+    
+    if(!trackSigmaHeaderWritten) {
+      ofstream debugFile("simplecalo_debug_tracksigma.csv", ios::trunc);
+      debugFile << "event,tower_idx,tower_eta,tower_phi,tower_energy,track_energy,track_sigma,n_tracks" << endl;
+      debugFile.close();
+      trackSigmaHeaderWritten = true;
+    }
+    
+    ofstream debugFile("simplecalo_debug_tracksigma.csv", ios::app);
+    debugFile << g_towerDebugEvent << "," << trackSigmaTowerNumber << ","
+              << fTowerEta << "," << fTowerPhi << "," << fTowerEnergy << ","
+              << fTrackEnergy << "," << fTrackSigma << ","
+              << fTowerTrackArray->GetEntries() << endl;
+    debugFile.close();
+    trackSigmaTowerNumber++;
+  }
+  
   neutralEnergy = max((energy - fTrackEnergy), 0.0);
 
   //compute sigma_trk total
