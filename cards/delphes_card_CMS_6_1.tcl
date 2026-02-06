@@ -426,6 +426,6 @@ module TreeWriter TreeWriter {
   add Branch Calorimeter/towers CalorimeterTower Tower
 
   # EFlow merged objects
-  add Branch EFlowMerger/eflow EFlowObject EFlowObject
+  add Branch EFlowMerger/eflow EFlowObject ParticleFlowCandidate
 
 }
